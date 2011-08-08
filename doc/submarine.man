@@ -1,0 +1,60 @@
+.\" Manpage for submarine.
+.TH submarine 1 "08 Aug 2011" "0.0.0" "submarine man page"
+.SH NAME
+submarine \- download subtitles
+.SH SYNOPSIS
+submarine [OPTION...] FILE...
+.SH DESCRIPTION
+.B submarine
+searches and downloads subtitles for input \fIFILE\fRs from different online subtitle services. Downloaded subtitles are automatically renamed and saved next to corresponding \fIFILE\fRs.
+.SH OPTIONS
+.TP
+.B -l \fICODE\fB, --language=\fICODE\fB
+Select language to filter subtitles. \fICODE\fR is a 2 or 3 letter language code (ISO-639-1 and ISO-639-2). Avaliable options can be listed with \fB-l help\fR. This option can be specified multiple times. By default, only english (\fBeng\fR, \fBen\fR) language is selected.
+.TP
+.B -s \fICODE\fB, --server=\fICODE\fB
+Select server to use for searching subtitles. \fICODE\fR is a 2 letter server code. Avaliable options can be listed with \fB-s help\fR. This option can be specified multiple times. By default, \fBall\fR servers are selected.
+.TP
+.B -f, --force
+Overwrite all subtitle files.
+.TP
+.B -q, --quiet
+Quiet mode. Don't output any messages or warnings.
+.TP
+.B -v, --verbose
+Verbose mode. Output all messages and warnings.
+.TP
+.B -V, --version
+Display version information and exit.
+.TP
+.B -h, --help
+Display help message and exit.
+.SH EXAMPLES
+Download a subtitle in Slovenian or Croatian language:
+.RS
+.LP
+submarine -l slv -l hrv USS_Barracuda.avi
+.LP
+.RE
+Download subtitles for mutliple files:
+.RS
+.LP
+submarine Season01/*.mpg
+.LP
+.RE
+Download subtitles only from OpenSubtitles:
+.RS
+.LP
+submarine -s os Zulu.mkv U-boat.mp4
+.LP
+.RE
+All together:
+.RS
+.LP
+submarine -l slv -l hrv -s os USS_Barracuda.avi Season01/*.mpg Zulu.mkv U-boat.mp4
+.LP
+.RE
+.SH BUGS
+Don't use this program on a big selection of \fIFILE\fRs at once (100+). For now this program queries for all files at once. Servers normally have a limited output and it can happen that they can't return all the results.
+.SH AUTHOR
+Blaž Tomažič (blaz.tomazic@gmail.com)
