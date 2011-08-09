@@ -6,7 +6,7 @@ submarine \- download subtitles
 submarine [OPTION...] FILE...
 .SH DESCRIPTION
 .B submarine
-searches and downloads subtitles for input \fIFILE\fRs from different online subtitle services. Downloaded subtitles are automatically renamed and saved next to corresponding \fIFILE\fRs.
+searches and downloads subtitles for input \fIFILE\fRs from online subtitle services based on file hashes. Downloaded subtitles are automatically renamed and saved next to corresponding \fIFILE\fRs.
 .SH OPTIONS
 .TP
 .B -l \fICODE\fB, --language=\fICODE\fB
@@ -16,7 +16,7 @@ Select language to filter subtitles. \fICODE\fR is a 2 or 3 letter language code
 Select server to use for searching subtitles. \fICODE\fR is a 2 letter server code. Avaliable options can be listed with \fB-s help\fR. This option can be specified multiple times. By default, \fBall\fR servers are selected.
 .TP
 .B -f, --force
-Overwrite all subtitle files.
+Overwrite all existing subtitle files.
 .TP
 .B -q, --quiet
 Quiet mode. Don't output any messages or warnings.
