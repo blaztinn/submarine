@@ -1,0 +1,90 @@
+Submarine
+===========
+Blaž Tomažič <blaz.tomazic@gmail.com>
+0.0.0, 2011-08-09
+:Author:    Blaž Tomažič
+:Email:     blaz.tomazic@gmail.com
+:Date:      2011-08-09
+:Revision:  1
+
+== Description
+*Submarine* is a command-line application for searching and downloading *the right subtitles* for movies. Subtitles are searched based on movie file *hashes* and downloaded from online subtitle services. Downloaded subtitles are automatically renamed and saved next to corresponding files.
+
+== Usage
+
+=== Synopsis
+
++submarine [OPTION...] FILE...+
+
+=== Options
+
+-l CODE, --language=CODE::
+  Select language to filter subtitles. CODE is a 2 or 3 letter language code (ISO-639-1 and ISO-639-2). Avaliable options can be listed with +-l help+. This option can be specified multiple times. By default, only english (+eng+, +en+) language is selected.
+
+-s CODE, --server=CODE::
+  Select server to use for searching subtitles. CODE is a 2 letter server code. Avaliable options can be listed with +-s help+. This option can be specified multiple times. By default, +all+ servers are selected.
+
+-f, --force::
+  Overwrite all existing subtitle files.
+
+-q, --quiet::
+  Quiet mode. Don't output any messages or warnings.
+
+-v, --verbose::
+  Verbose mode. Output all messages and warnings.
+
+-V, --version::
+  Display version information and exit.
+
+-h, --help::
+  Display help message and exit.
+
+== Installation
+
+Submarine is in early development and has no version releases yet. Therefore it is recommended to use the latest git commit.
+
+=== Dependecies
+
+Submarine has little dependencies and is really lightweight.
+
+.Runtime
+- glib2
+- libgee
+- libsoup
+
+.Build
+- vala
+- autotools (autoconf, automake, libtool,...)
+
+=== Build
+
+To build submarine, run the following commands:
+----
+./autogen.sh
+./configure
+make
+----
+
+=== Install
+
+To install submarine, run the following commands:
+----
+make install
+----
+
+== Contribution
+Any kind of code fix/addition, translation, bug report, feature request, etc. is highly appreciated.
+
+.Flattr
+****
+If you really like this project consider Flattring it on Flattr.
+
+image:http://api.flattr.com/button/flattr-badge-large.png[
+"Flattr this git repo",
+link="https://flattr.com/submit/auto?user_id=blazt&url=http://github.com/blazt/submarine&title=Submarine&language=en_GB&tags=github&category=software"]
+****
+
+== Powered by
+This application is based on the following online subtitle services:
+
+- *OpenSubtitles*	 (http://www.opensubtitles.org)
