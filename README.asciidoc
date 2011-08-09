@@ -73,16 +73,14 @@ make install
 ----
 
 == Contribution
+
 Any kind of code fix/addition, translation, bug report, feature request, etc. is highly appreciated.
 
-.Flattr
-****
-If you really like this project consider Flattring it on Flattr.
+If you really like this project consider Flattring it on Flattr:
 
 image:http://api.flattr.com/button/flattr-badge-large.png[
 "Flattr this git repo",
 link="https://flattr.com/submit/auto?user_id=blazt&url=http://github.com/blazt/submarine&title=Submarine&language=en_GB&tags=github&category=software"]
-****
 
 == Powered by
 This application is based on the following online subtitle services:
