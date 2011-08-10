@@ -1,4 +1,10 @@
 private class SubmarineConsole : Object {
+	private enum ExitValue {
+		OK = 0,
+		NO_EFFECT = 1,
+		INVALID_INPUT = 2
+	}
+	
 	[CCode (array_length = false, array_null_terminated = true)]
 	private static string[] _filenames;
 	[CCode (array_length = false, array_null_terminated = true)]
@@ -60,13 +66,13 @@ private class SubmarineConsole : Object {
 		try {
 			opt_context.parse(ref args);
 		} catch(Error e) {
-			Report.error(e.message, 1);
+			Report.error(e.message, ExitValue.INVALID_INPUT);
 		}
 		
 		//no args
 		if(args_length == 1) {
 			Report.message(opt_context.get_help(true, null), false);
-			Process.exit(0);
+			Process.exit(ExitValue.INVALID_INPUT);
 		}
 		
 		filenames = string_array_to_set(_filenames);
@@ -76,7 +82,7 @@ private class SubmarineConsole : Object {
 		//program info
 		if(info) {
 			Report.message("%s %s".printf(name, version));
-			Process.exit(0);
+			Process.exit(ExitValue.OK);
 		}
 		
 		//verbosity
@@ -96,9 +102,9 @@ private class SubmarineConsole : Object {
 					var server_info = Submarine.get_server_info(all_code);
 					Report.message("  %s - %s (%s)".printf(server_info.code, server_info.name, server_info.address));
 				}
-				Process.exit(0);
+				Process.exit(ExitValue.OK);
 			} else if(!all_server_codes.contains(code)) {
-				Report.error("Server '%s' does not exist!".printf(code), 1);
+				Report.error("Server '%s' does not exist!".printf(code), ExitValue.INVALID_INPUT);
 			}
 		}
 		//languages
@@ -117,19 +123,19 @@ private class SubmarineConsole : Object {
 						}
 					}
 				}
-				Process.exit(0);
+				Process.exit(ExitValue.OK);
 			} else if(!all_language_codes.contains(language)) {
-				Report.error("Language '%s' does not exist!".printf(language), 1);
+				Report.error("Language '%s' does not exist!".printf(language), ExitValue.INVALID_INPUT);
 			}
 		}
 		
 		//filenames
 		if(filenames.is_empty) {
-			Report.error("No file selected!", 1);
+			Report.error("No file selected!", ExitValue.INVALID_INPUT);
 		}
 		foreach(var filename in filenames) {
 			if(!FileUtils.test(filename, FileTest.IS_REGULAR)) {
-				Report.error("File '%s' does not exist!".printf(filename), 1);
+				Report.error("File '%s' does not exist!".printf(filename), ExitValue.INVALID_INPUT);
 			}
 		}
 		
@@ -262,12 +268,17 @@ private class SubmarineConsole : Object {
 					Report.message("  (Not found) %s".printf(filename));
 				}
 			}
+			
+			//Return >0 if nothing was saved or overwritten
+			if(subtitles_saved_map.is_empty) {
+				return ExitValue.NO_EFFECT;
+			}
 		} else {
 			Report.message("Summary:");
 			Report.message("  Could not connect to any Server!");
-			return 1;
+			return ExitValue.NO_EFFECT;
 		}
 		
-		return 0;
+		return ExitValue.OK;
 	}
 }
