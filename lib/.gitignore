@@ -1,0 +1,9 @@
+.deps
+.libs
+
+*.c
+*.la
+*.lo
+
+submarine.h
+submarine.vapi
