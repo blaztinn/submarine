@@ -10,14 +10,25 @@ namespace Submarine {
 					"os");
 		}
 		
-		private string language_codes_string(Gee.Collection<string> collection) {
-			string language_codes = "";
+		private string language_codes_string(Gee.Collection<string> languages) {
+			var languages_set = new Gee.HashSet<string>();
 			
-			foreach(var lang in collection) {
-				var language_info = get_language_info(lang);
-				if(language_info != null) {
-					language_codes += "%s,".printf(language_info.long_code);
+			foreach(var language in languages) {
+				var language_info = get_language_info(language);
+				
+				languages_set.add(language_info.long_code);
+				if(language_info.long_code_alt != null) {
+					languages_set.add(language_info.long_code_alt);
 				}
+				if(language_info.short_code != null) {
+					languages_set.add(language_info.short_code);
+				}
+			}
+			
+			var language_codes = "";
+			
+			foreach(var language_code in languages_set) {
+				language_codes += "%s,".printf(language_code);
 			}
 			if(language_codes.length > 0) {
 				language_codes = language_codes[0:-1];

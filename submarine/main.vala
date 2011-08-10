@@ -114,13 +114,13 @@ private class SubmarineConsole : Object {
 			if(language == "help") {
 				Report.message("Available languages:");
 				foreach(var all_code in all_language_codes) {
-					if(all_code.length == 3) {
-						var language_info = Submarine.get_language_info(all_code);
-						if(language_info.short_code == null) {
-							Report.message("  %s    - %s".printf(language_info.long_code, language_info.name));
-						} else {
-							Report.message("  %s %s - %s".printf(language_info.long_code, language_info.short_code, language_info.name));
-						}
+					var language_info = Submarine.get_language_info(all_code);
+					if(language_info.long_code == all_code) {
+						Report.message("  %s %s %s - %s".printf(
+								language_info.long_code,
+								language_info.long_code_alt ?? "   ",
+								language_info.short_code ?? "  ",
+								language_info.name));
 					}
 				}
 				Process.exit(ExitValue.OK);
