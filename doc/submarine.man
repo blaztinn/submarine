@@ -1,5 +1,5 @@
 .\" Manpage for submarine.
-.TH submarine 1 "08 Aug 2011" "0.0.0" "submarine man page"
+.TH submarine 1 "11 Aug 2011" "0.0.0" "submarine man page"
 .SH NAME
 submarine \- download subtitles
 .SH SYNOPSIS
@@ -54,7 +54,5 @@ All together:
 submarine -l slv -l hrv -s os USS_Barracuda.avi Season01/*.mpg Zulu.mkv U-boat.mp4
 .LP
 .RE
-.SH BUGS
-Don't use this program on a big selection of \fIFILE\fRs at once (100+). For now this program queries for all files at once. Servers normally have a limited output and it can happen that they can't return all the results.
 .SH AUTHOR
 Blaž Tomažič (blaz.tomazic@gmail.com)
