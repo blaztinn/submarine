@@ -1,9 +1,16 @@
 private class SubmarineConsole : Object {
 	private enum ExitValue {
 		OK = 0,
-		NO_EFFECT = 1,
-		INVALID_INPUT = 2
+		PROGRAM_ERROR = 1,
+		INPUT_ERROR = 2
 	}
+	
+	private const string[] SUBTITLE_EXTENSIONS = {
+		"aqt", "jss", "sub", "ttxt",
+		"pjs", "psb", "rt", "smi",
+		"ssf", "srt", "gsub", "ssa",
+		"ass", "usf", "txt"
+	};
 	
 	[CCode (array_length = false, array_null_terminated = true)]
 	private static string[] _filenames;
@@ -14,9 +21,9 @@ private class SubmarineConsole : Object {
 	
 	const OptionEntry[] options = {
 		{ "", 0, 0, OptionArg.FILENAME_ARRAY, out _filenames, "List of movie files", "FILE..." },
-		{ "language", 'l', 0, OptionArg.STRING_ARRAY, out _languages, "Set languages to filter (use '-l help' to list all options)", "CODE" },
-		{ "server", 's', 0, OptionArg.STRING_ARRAY, out _server_codes, "Set servers to use (use '-s help' to list all options)", "CODE" },
-		{ "force", 'f', 0, OptionArg.NONE, out force, "Overwrite existing subtitles", null },
+		{ "language", 'l', 0, OptionArg.STRING_ARRAY, out _languages, "Set languages to filter (use '-l help' to list available options)", "CODE" },
+		{ "server", 's', 0, OptionArg.STRING_ARRAY, out _server_codes, "Set servers to use (use '-s help' to list available options)", "CODE" },
+		{ "force", 'f', 0, OptionArg.NONE, out force, "Replace existing subtitles", null },
 		{ "quiet", 'q', 0, OptionArg.NONE, out quiet, "Be quiet", null },
 		{ "verbose", 'v', 0, OptionArg.NONE, out verbose, "Be verbose", null },
 		{ "version", 'V', 0, OptionArg.NONE, out info, "Show program information", null },
@@ -27,6 +34,7 @@ private class SubmarineConsole : Object {
 	private const string version = Config.PACKAGE_VERSION;
 	
 	private static Gee.Set<string> filenames;
+	private static Gee.MultiMap<string, string> existing_subtitles;
 	private static Gee.Set<string> languages;
 	private static Gee.Set<string> server_codes;
 	private static bool force = false;
@@ -66,13 +74,13 @@ private class SubmarineConsole : Object {
 		try {
 			opt_context.parse(ref args);
 		} catch(Error e) {
-			Report.error(e.message, ExitValue.INVALID_INPUT);
+			Report.error(e.message, ExitValue.INPUT_ERROR);
 		}
 		
 		//no args
 		if(args_length == 1) {
 			Report.message(opt_context.get_help(true, null), false);
-			Process.exit(ExitValue.INVALID_INPUT);
+			Process.exit(ExitValue.INPUT_ERROR);
 		}
 		
 		filenames = string_array_to_set(_filenames);
@@ -104,7 +112,7 @@ private class SubmarineConsole : Object {
 				}
 				Process.exit(ExitValue.OK);
 			} else if(!all_server_codes.contains(code)) {
-				Report.error("Server '%s' does not exist!".printf(code), ExitValue.INVALID_INPUT);
+				Report.error("Server '%s' does not exist! Use '-s help' to list available options.".printf(code), ExitValue.INPUT_ERROR);
 			}
 		}
 		//languages
@@ -125,17 +133,35 @@ private class SubmarineConsole : Object {
 				}
 				Process.exit(ExitValue.OK);
 			} else if(!all_language_codes.contains(language)) {
-				Report.error("Language '%s' does not exist!".printf(language), ExitValue.INVALID_INPUT);
+				Report.error("Language '%s' does not exist! Use '-l help' to list available options.".printf(language), ExitValue.INPUT_ERROR);
 			}
 		}
 		
 		//filenames
 		if(filenames.is_empty) {
-			Report.error("No file selected!", ExitValue.INVALID_INPUT);
+			Report.error("No file selected!", ExitValue.INPUT_ERROR);
 		}
+		
+		existing_subtitles = new Gee.HashMultiMap<string, string>();
 		foreach(var filename in filenames) {
 			if(!FileUtils.test(filename, FileTest.IS_REGULAR)) {
-				Report.error("File '%s' does not exist!".printf(filename), ExitValue.INVALID_INPUT);
+				Report.error("File '%s' does not exist!".printf(filename), ExitValue.INPUT_ERROR);
+			}
+			
+			foreach(var sub_extension in SUBTITLE_EXTENSIONS) {
+				string sub_filename = filename;
+				sub_filename = sub_filename.slice(0, sub_filename.last_index_of(".")+1) + sub_extension;
+				
+				if(FileUtils.test(sub_filename, FileTest.EXISTS)) {
+					existing_subtitles.set(filename, sub_filename);
+					
+					if(!force) {
+						Report.warning("File '%s' already has a subtitle! Use '--force' to replace.".printf(filename), true, Report.Verbosity.ALL);
+						break; //we only need to find one subtitle per file if we don't use force
+					} else {
+						Report.warning("Replacing '%s' subtitle.".printf(sub_filename), true, Report.Verbosity.ALL);
+					}
+				}
 			}
 		}
 		
@@ -202,11 +228,23 @@ private class SubmarineConsole : Object {
 		}
 		
 		if(!connected_servers.is_empty) {
+			Gee.Set<string> search_filenames;
+			
+			if(!force) {
+				search_filenames = new Gee.HashSet<string>();
+				search_filenames.add_all(filenames);
+				search_filenames.remove_all(existing_subtitles.get_keys());
+			} else {
+				search_filenames = filenames;
+			}
+			
 			//Search for available subtitles
-			Report.message("Searching for subtitles:");
-			var subtitles_found_map = session.subtitle_search_multiple(filenames, languages);
+			if(!search_filenames.is_empty) {
+				Report.message("Searching for subtitles:");
+			}
+			var subtitles_found_map = session.subtitle_search_multiple(search_filenames, languages);
 			//  Report number of subtitles found per file
-			foreach(var filename in filenames) {
+			foreach(var filename in search_filenames) {
 				if(filename in subtitles_found_map) {
 					Report.message("  (%d) %s".printf(subtitles_found_map[filename].size, filename));
 				} else {
@@ -215,9 +253,6 @@ private class SubmarineConsole : Object {
 			}
 			
 			//Select and download one subtitle per file
-			if(subtitles_found_map.size > 0) {
-				Report.message("Downloading subtitles:");
-			}
 			var subtitles_download_map = new Gee.HashMap<string, Submarine.Subtitle>();
 			//  Select subtitles with best rating per each file
 			foreach(var key in subtitles_found_map.get_keys()) {
@@ -232,51 +267,76 @@ private class SubmarineConsole : Object {
 				}
 			}
 			//  Download selected subtitles
+			if(subtitles_found_map.size > 0) {
+				Report.message("Downloading subtitles:");
+			}
 			var subtitles_downloaded = session.subtitle_download_multiple(subtitles_download_map.values);
 			//  Report downloaded subtitles rating or error
+			var subtitles_save_map = new Gee.HashMap<string, Submarine.Subtitle>();
 			foreach(var entry in subtitles_download_map.entries) {
 				if(entry.value in subtitles_downloaded) {
 					Report.message("  (%.1f) %s".printf(entry.value.rating, entry.value.get_filename(entry.key)));
+					subtitles_save_map.set(entry.key, entry.value);
 				} else {
 					Report.message("  (Could not download) %s".printf(entry.value.get_filename(entry.key)));
 				}
 			}
 			
 			//Save downloaded subtitles
-			var subtitles_saved_map = subtitle_save_multiple(subtitles_download_map, force);
+			//  Delete existing subtitles if we use force
+			if(force) {
+				foreach(var filename in subtitles_save_map.keys) {
+					foreach(var sub_filename in existing_subtitles[filename]) {
+						FileUtils.remove(sub_filename);
+					}
+				}
+			}
+			//  Save new ones
+			var subtitles_saved_map = subtitle_save_multiple(subtitles_save_map, force);
 			
 			//Report success/failure for each file
+			var error = false;
 			Report.message("Summary:");
 			foreach(var filename in filenames) {
 				if(filename in subtitles_saved_map.keys) {
 					//  Subtitle successfully saved
-					Report.message("  (Saved) %s".printf(subtitles_saved_map[filename]));
-				} else if(subtitles_download_map.has_key(filename)) {
+					if(!(filename in existing_subtitles.get_keys())) {
+						Report.message("  (Saved) %s".printf(subtitles_saved_map[filename]));
+					} else {
+						Report.message("  (Replaced) %s".printf(subtitles_saved_map[filename]));
+					}
+				} else if(subtitles_save_map.has_key(filename)) {
 					//  Could not save subtitle
 					var sub_filename = subtitles_download_map[filename].get_filename(filename);
-					if(FileUtils.test(sub_filename, FileTest.EXISTS)){
-						Report.message("  (File already exists) %s".printf(sub_filename));
-					} else {
-						Report.message("  (Could not save) %s".printf(sub_filename));
-					}
-				} else if(filename in subtitles_found_map && subtitles_found_map[filename].size > 0) {
+					Report.message("  (Could not save) %s".printf(sub_filename));
+					error = true;
+				} else if(filename in subtitles_download_map.keys) {
 					//  Could not download subtitle
-					var sub_filename = subtitles_found_map[filename].iterator().get().get_filename(filename);
+					var it = subtitles_found_map[filename].iterator();
+					it.next();
+					var sub_filename = it.get().get_filename(filename);
 					Report.message("  (Could not download) %s".printf(sub_filename));
+					error = true;
+				} else if(!force && filename in existing_subtitles.get_keys()) {
+					//  Subtitle already exists
+					var it = existing_subtitles[filename].iterator();
+					it.next();
+					var sub_filename = it.get();
+					Report.message("  (Already exists) %s".printf(sub_filename));
 				} else {
 					//  Could not find subtitle
 					Report.message("  (Not found) %s".printf(filename));
+					error = true;
 				}
 			}
 			
-			//Return >0 if nothing was saved or overwritten
-			if(subtitles_saved_map.is_empty) {
-				return ExitValue.NO_EFFECT;
+			if(error) {
+				return ExitValue.PROGRAM_ERROR;
 			}
 		} else {
 			Report.message("Summary:");
 			Report.message("  Could not connect to any Server!");
-			return ExitValue.NO_EFFECT;
+			return ExitValue.PROGRAM_ERROR;
 		}
 		
 		return ExitValue.OK;
