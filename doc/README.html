@@ -715,8 +715,8 @@ asciidoc.install();
 <h1>Submarine</h1>
 <span id="author">Blaž Tomažič</span><br />
 <span id="email"><tt>&lt;<a href="mailto:blaz.tomazic@gmail.com">blaz.tomazic@gmail.com</a>&gt;</tt></span><br />
-<span id="revnumber">version 0.0.0,</span>
-<span id="revdate">2011-08-09</span>
+<span id="revnumber">version 0.1.0,</span>
+<span id="revdate">2011-08-11</span>
 </div>
 <div id="content">
 <div class="sect1">
@@ -736,7 +736,7 @@ asciidoc.install();
 <h3 id="_options">Options</h3>
 <div class="dlist"><dl>
 <dt class="hdlist1">
--l CODE, --language=CODE
+<tt>-l CODE, --language=CODE</tt>
 </dt>
 <dd>
 <p>
@@ -744,7 +744,7 @@ asciidoc.install();
 </p>
 </dd>
 <dt class="hdlist1">
--s CODE, --server=CODE
+<tt>-s CODE, --server=CODE</tt>
 </dt>
 <dd>
 <p>
@@ -752,7 +752,7 @@ asciidoc.install();
 </p>
 </dd>
 <dt class="hdlist1">
--f, --force
+<tt>-f, --force</tt>
 </dt>
 <dd>
 <p>
@@ -760,7 +760,7 @@ asciidoc.install();
 </p>
 </dd>
 <dt class="hdlist1">
--q, --quiet
+<tt>-q, --quiet</tt>
 </dt>
 <dd>
 <p>
@@ -768,7 +768,7 @@ asciidoc.install();
 </p>
 </dd>
 <dt class="hdlist1">
--v, --verbose
+<tt>-v, --verbose</tt>
 </dt>
 <dd>
 <p>
@@ -776,7 +776,7 @@ asciidoc.install();
 </p>
 </dd>
 <dt class="hdlist1">
--V, --version
+<tt>-V, --version</tt>
 </dt>
 <dd>
 <p>
@@ -784,7 +784,7 @@ asciidoc.install();
 </p>
 </dd>
 <dt class="hdlist1">
--h, --help
+<tt>-h, --help</tt>
 </dt>
 <dd>
 <p>
@@ -793,12 +793,35 @@ asciidoc.install();
 </dd>
 </dl></div>
 </div>
+<div class="sect2">
+<h3 id="_examples">Examples</h3>
+<div class="paragraph"><p>Download a subtitle in Slovenian or Croatian language:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>submarine -l slv -l hr USS_Barracuda.avi</tt></pre>
+</div></div>
+<div class="paragraph"><p>Download subtitles for mutliple files:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>submarine Season01/*.mpg</tt></pre>
+</div></div>
+<div class="paragraph"><p>Download subtitles only from OpenSubtitles:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>submarine -s os Zulu.mkv U-boat.mp4</tt></pre>
+</div></div>
+<div class="paragraph"><p>All together:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>submarine -l slv -l hr -s os USS_Barracuda.avi Season01/*.mpg Zulu.mkv U-boat.mp4</tt></pre>
+</div></div>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Submarine is in early development and has no version releases yet. Therefore it is recommended to use the latest git commit.</p></div>
+<div class="paragraph"><p>Submarine is developed on and for <strong>GNU/Linux</strong>, although it may work on other Unix platforms.</p></div>
 <div class="sect2">
 <h3 id="_dependecies">Dependecies</h3>
 <div class="paragraph"><p>Submarine has little dependencies and is really lightweight.</p></div>
@@ -871,7 +894,7 @@ make</tt></pre>
 <div class="ulist"><ul>
 <li>
 <p>
-<strong>OpenSubtitles</strong>        (<a href="http://www.opensubtitles.org">http://www.opensubtitles.org</a>)
+<strong>OpenSubtitles</strong> (<a href="http://www.opensubtitles.org">http://www.opensubtitles.org</a>)
 </p>
 </li>
 </ul></div>
@@ -881,8 +904,8 @@ make</tt></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Version 0.0.0<br />
-Last updated 2011-08-09 11:49:48 CEST
+Version 0.1.0<br />
+Last updated 2011-08-11 13:44:29 CEST
 </div>
 </div>
 </body>

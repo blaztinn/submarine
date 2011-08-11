@@ -1,5 +1,5 @@
 .\" Manpage for submarine.
-.TH submarine 1 "11 Aug 2011" "0.0.0" "submarine man page"
+.TH submarine 1 "11 Aug 2011" "0.1.0" "submarine man page"
 .SH NAME
 submarine \- download subtitles
 .SH SYNOPSIS
@@ -33,7 +33,7 @@ Display help message and exit.
 Download a subtitle in Slovenian or Croatian language:
 .RS
 .LP
-submarine -l slv -l hrv USS_Barracuda.avi
+submarine -l slv -l hr USS_Barracuda.avi
 .LP
 .RE
 Download subtitles for mutliple files:
@@ -51,7 +51,7 @@ submarine -s os Zulu.mkv U-boat.mp4
 All together:
 .RS
 .LP
-submarine -l slv -l hrv -s os USS_Barracuda.avi Season01/*.mpg Zulu.mkv U-boat.mp4
+submarine -l slv -l hr -s os USS_Barracuda.avi Season01/*.mpg Zulu.mkv U-boat.mp4
 .LP
 .RE
 .SH AUTHOR

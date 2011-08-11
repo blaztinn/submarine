@@ -3,3 +3,5 @@ SUBDIRS = lib submarine doc
 
 dataroot_DATA = COPYING \
 				COPYING.LESSER
+
+EXTRA_DIST = ChangeLog

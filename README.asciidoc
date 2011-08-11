@@ -1,10 +1,10 @@
 Submarine
 ===========
 Blaž Tomažič <blaz.tomazic@gmail.com>
-0.0.0, 2011-08-09
+0.1.0, 2011-08-11
 :Author:    Blaž Tomažič
 :Email:     blaz.tomazic@gmail.com
-:Date:      2011-08-09
+:Date:      2011-08-11
 :Revision:  1
 
 == Description
@@ -18,30 +18,52 @@ Blaž Tomažič <blaz.tomazic@gmail.com>
 
 === Options
 
--l CODE, --language=CODE::
++-l CODE, --language=CODE+::
   Select language to filter subtitles. CODE is a 2 or 3 letter language code (ISO-639-1 and ISO-639-2). Avaliable options can be listed with +-l help+. This option can be specified multiple times. By default, only english (+eng+, +en+) language is selected.
 
--s CODE, --server=CODE::
++-s CODE, --server=CODE+::
   Select server to use for searching subtitles. CODE is a 2 letter server code. Avaliable options can be listed with +-s help+. This option can be specified multiple times. By default, +all+ servers are selected.
 
--f, --force::
++-f, --force+::
   Overwrite all existing subtitle files.
 
--q, --quiet::
++-q, --quiet+::
   Quiet mode. Don't output any messages or warnings.
 
--v, --verbose::
++-v, --verbose+::
   Verbose mode. Output all messages and warnings.
 
--V, --version::
++-V, --version+::
   Display version information and exit.
 
--h, --help::
++-h, --help+::
   Display help message and exit.
+
+=== Examples
+
+Download a subtitle in Slovenian or Croatian language:
+----
+submarine -l slv -l hr USS_Barracuda.avi
+----
+
+Download subtitles for mutliple files:
+----
+submarine Season01/*.mpg
+----
+
+Download subtitles only from OpenSubtitles:
+----
+submarine -s os Zulu.mkv U-boat.mp4
+----
+
+All together:
+----
+submarine -l slv -l hr -s os USS_Barracuda.avi Season01/*.mpg Zulu.mkv U-boat.mp4
+----
 
 == Installation
 
-Submarine is in early development and has no version releases yet. Therefore it is recommended to use the latest git commit.
+Submarine is developed on and for *GNU/Linux*, although it may work on other Unix platforms.
 
 === Dependecies
 
@@ -85,4 +107,4 @@ link="https://flattr.com/submit/auto?user_id=blazt&url=http://github.com/blazt/s
 == Powered by
 This application is based on the following online subtitle services:
 
-- *OpenSubtitles*	 (http://www.opensubtitles.org)
+- *OpenSubtitles* (http://www.opensubtitles.org)
