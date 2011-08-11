@@ -25,16 +25,10 @@ namespace Submarine {
 				}
 			}
 			
-			var language_codes = "";
+			var languages_array = languages_set.to_array();
+			var languages_array_copy = languages_array;
 			
-			foreach(var language_code in languages_set) {
-				language_codes += "%s,".printf(language_code);
-			}
-			if(language_codes.length > 0) {
-				language_codes = language_codes[0:-1];
-			}
-			
-			return language_codes;
+			return string.joinv(",", languages_array_copy);
 		}
 		
 		private uint64 file_size(File file) throws Error {
