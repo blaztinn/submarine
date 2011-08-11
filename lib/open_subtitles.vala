@@ -102,13 +102,11 @@ namespace Submarine {
 					typeof(string), this.session_token);
 		}
 		
-		public override Gee.Set<Subtitle> search(string filename, Gee.Collection<string> languages) {
-			
+		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
 			var subtitles_found = new Gee.HashSet<Subtitle>();
 			var requests = new ValueArray(0);
 			
 			try {
-				var file = File.new_for_path(filename);
 				string codes = language_codes_string(languages);
 				string hash = "%016llx".printf(this.file_hash(file));
 				double size = this.file_size(file);
@@ -229,14 +227,13 @@ namespace Submarine {
 			return values;
 		}
 		
-		public override Gee.MultiMap<string, Subtitle> search_multiple(Gee.Collection<string> filenames, Gee.Collection<string> languages) {
-			var subtitles_found_map = new Gee.HashMultiMap<string, Subtitle>();
+		public override Gee.MultiMap<File, Subtitle> search_multiple(Gee.Collection<File> files, Gee.Collection<string> languages) {
+			var subtitles_found_map = new Gee.HashMultiMap<File, Subtitle>();
 			var requests = new Gee.ArrayList<Value?>();
-			var hash_filename = new Gee.HashMap<string, string>();
+			var hash_file = new Gee.HashMap<string, File>();
 			
-			foreach (string filename in filenames) {
+			foreach (var file in files) {
 				try {
-					var file = File.new_for_path(filename);
 					string codes = language_codes_string(languages);
 					string hash = "%016llx".printf(this.file_hash(file));
 					double size = this.file_size(file);
@@ -248,7 +245,7 @@ namespace Submarine {
 					
 					requests.add(request);
 					
-					hash_filename.set(hash, filename);
+					hash_file.set(hash, file);
 				} catch(Error e) {}
 			}
 			
@@ -269,7 +266,7 @@ namespace Submarine {
 					subtitle.language = (string)result.lookup("ISO639");
 					subtitle.rating = double.parse((string)result.lookup("SubRating"));
 					
-					subtitles_found_map.set(hash_filename[(string)result.lookup("MovieHash")], subtitle);
+					subtitles_found_map.set(hash_file[(string)result.lookup("MovieHash")], subtitle);
 				}
 			}
 			

@@ -28,15 +28,15 @@ namespace Submarine {
 		
 		public abstract new bool connect();
 		public abstract new void disconnect();
-		public abstract Gee.Set<Subtitle> search(string filename, Gee.Collection<string> languages);
+		public abstract Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages);
 		public abstract Subtitle? download(Subtitle subtitle);
 		
-		public virtual Gee.MultiMap<string, Subtitle> search_multiple(Gee.Collection<string> filenames, Gee.Collection<string> languages) {
-			var subtitles_found_map = new Gee.HashMultiMap<string, Subtitle>();
+		public virtual Gee.MultiMap<File, Subtitle> search_multiple(Gee.Collection<File> files, Gee.Collection<string> languages) {
+			var subtitles_found_map = new Gee.HashMultiMap<File, Subtitle>();
 			
-			foreach(string filename in filenames) {
-				foreach(var subtitle in this.search(filename, languages)) {
-					subtitles_found_map.set(filename, subtitle);
+			foreach(var file in files) {
+				foreach(var subtitle in this.search(file, languages)) {
+					subtitles_found_map.set(file, subtitle);
 				}
 			}
 			

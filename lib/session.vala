@@ -64,9 +64,12 @@ namespace Submarine {
 		
 		public Gee.Set<Subtitle> subtitle_search(string filename, Gee.Collection<string> languages) {
 			var subtitles_found = new Gee.HashSet<Subtitle>();
+			var file = File.new_for_path(filename);
 			
-			foreach(var server_code in this.connected_servers) {
-				subtitles_found.add_all(this.sub_server_map[server_code].search(filename, languages));
+			if(file.query_exists()) {
+				foreach(var server_code in this.connected_servers) {
+					subtitles_found.add_all(this.sub_server_map[server_code].search(file, languages));
+				}
 			}
 			
 			return subtitles_found;
@@ -74,12 +77,23 @@ namespace Submarine {
 		
 		public Gee.MultiMap<string, Subtitle> subtitle_search_multiple(Gee.Collection<string> filenames, Gee.Collection<string> languages) {
 			var subtitles_found_map = new Gee.HashMultiMap<string, Subtitle>();
+			var files = new Gee.HashSet<File>();
+			var file_filename = new Gee.HashMap<File, string>();
+			
+			foreach(var filename in filenames) {
+				var file = File.new_for_path(filename);
+				
+				if(file.query_exists()) {
+					files.add(file);
+					file_filename.set(file, filename);
+				}
+			}
 			
 			foreach(var server_code in this.connected_servers) {
-				var file_subtitle_map = this.sub_server_map[server_code].search_multiple(filenames, languages);
+				var file_subtitle_map = this.sub_server_map[server_code].search_multiple(files, languages);
 				foreach(var key in file_subtitle_map.get_keys()) {
 					foreach(var subtitle in file_subtitle_map[key]) {
-						subtitles_found_map.set(key, subtitle);
+						subtitles_found_map.set(file_filename[key], subtitle);
 					}
 				}
 			}
