@@ -240,7 +240,7 @@ namespace Submarine {
 							Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
 							HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
 					
-							if((int)(vh.lookup("status")) == 200 && ((HashTable<string,Value?>)vh.lookup("results")).size() > 0) {
+							if((int)(vh.lookup("status")) == 200) {
 								return v;
 							}
 						}
@@ -253,7 +253,7 @@ namespace Submarine {
 					HashTable<string,Value?> vh = (HashTable<string,Value?>)response;
 					int results = 0;
 					
-					if((int)(vh.lookup("status")) == 200) {
+					if((int)((HashTable<string,Value?>)vh.lookup("results")).size() > 0) {
 						foreach(string hash in ((HashTable<string,Value?>)vh.lookup("results")).get_keys()) {
 							unowned ValueArray va = (ValueArray) ((HashTable<string,Value?>)((HashTable<string,Value?>)vh.lookup("results")).lookup(hash)).lookup("subtitles");
 							
@@ -275,7 +275,7 @@ namespace Submarine {
 					return results;
 				};
 				
-				this.batch_request("SearchSubtitles", requests, request_method, response_method, MAX/HITS, MAX);
+				this.batch_request(requests, request_method, response_method, MAX/HITS, MAX);
 			}
 			
 			return subtitles_found_map;
@@ -308,8 +308,8 @@ namespace Submarine {
 							string format;
 							
 							if(this.inflate_subtitle(message.response_body.data, out format, out data)) {
-								subtitle.data = data;
 								subtitle.format = format;
+								subtitle.data = data;
 								
 								return subtitle;
 							}

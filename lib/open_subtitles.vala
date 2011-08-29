@@ -60,7 +60,7 @@ namespace Submarine {
 			return hash;
 		}
 		
-		private string deflate_subtitle(uint8[] data) throws IOError{
+		private string inflate_subtitle(uint8[] data) throws IOError{
 			var src_stream = new MemoryInputStream.from_data(data, null);
 			var dst_stream = new MemoryOutputStream(null, GLib.realloc, GLib.free);
 			var conv_stream = new ConverterOutputStream (dst_stream, new ZlibDecompressor(ZlibCompressorFormat.GZIP));
@@ -71,12 +71,14 @@ namespace Submarine {
 		}
 		
 		public override bool connect() {
+			const string username = "";
+			const string password = "";
 			this.session = new Soup.SessionSync();
 			
 			var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
 					"LogIn",
-					typeof(string), "",
-					typeof(string), "", 
+					typeof(string), username,
+					typeof(string), password, 
 					typeof(string), "",
 					typeof(string), "OS Test User Agent");
 			
@@ -102,139 +104,21 @@ namespace Submarine {
 					typeof(string), this.session_token);
 		}
 		
-		public override Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
-			var subtitles_found = new Gee.HashSet<Subtitle>();
-			var requests = new ValueArray(0);
-			
-			try {
-				string codes = language_codes_string(languages);
-				string hash = "%016llx".printf(this.file_hash(file));
-				double size = this.file_size(file);
-				HashTable<string, Value?> request = new HashTable<string, Value?>(str_hash, str_equal);
-				
-				request.insert("sublanguageid", codes);
-				request.insert("moviehash", hash);
-				request.insert("moviebytesize", size);
-				
-				requests.append(request);
-				
-				var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
-						"SearchSubtitles",
-						typeof(string), this.session_token,
-						typeof(ValueArray), requests);
-				
-				if(this.session.send_message(message) == 200) {
-					Value v = Value (typeof (HashTable<string,Value?>));
-					Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-					HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-					
-					if((string)(vh.lookup("status")) == "200 OK" && vh.lookup("data").type() != typeof(bool)) {
-						foreach(Value vresult in (ValueArray)vh.lookup("data")) {
-							HashTable<string,Value?> result = (HashTable<string,Value?>)vresult;
-							
-							Subtitle subtitle = new Subtitle(this.info, result);
-							subtitle.format = (string)result.lookup("SubFormat");
-							subtitle.language = (string)result.lookup("ISO639");
-							subtitle.rating = double.parse((string)result.lookup("SubRating"));
-							
-							subtitles_found.add(subtitle);
-						}
-					}
-				}
-			} catch(Error e) {}
-			
-			return subtitles_found;
-		}
-		
-		public override Subtitle? download(Subtitle subtitle) {
-			var requests = new ValueArray(0);
-			
-			var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
-					"DownloadSubtitles",
-					typeof(string), this.session_token,
-					typeof(ValueArray), requests);
-			
-			if(this.session.send_message(message) == 200) {
-				try {
-					Value v = Value (typeof (HashTable<string,Value?>));
-					Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-					HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-					
-					if((string)(vh.lookup("status")) == "200 OK" && vh.lookup("data").type() != typeof(bool)) {
-						HashTable<string,Value?> result = (HashTable<string,Value?>)((ValueArray)vh.lookup("data")).get_nth(0);
-						
-						try {
-							var data = Base64.decode((string)result.lookup("data"));
-							subtitle.data = deflate_subtitle(data);
-							
-							return subtitle;
-						} catch (Error e) {}
-					}
-				} catch (Error e) {}
-			}
-			
-			return null;
-		}
-		
-		private Gee.ArrayList<Value?> batch_request(string function_name, Gee.ArrayList<Value?> requests, int max_request_size, int max_response_size = 0)
-			requires (max_request_size > 0)
-			requires (max_response_size >= 0)
-		{
-			var batch_size = max_request_size;
-			var values = new Gee.ArrayList<Value?>();//to hold response values until end of this function
-			max_response_size = max_response_size > 0 ? max_response_size : max_request_size;
-			
-			var request_index = 0;
-			while(request_index < requests.size) {
-				batch_size = requests.size-request_index < batch_size ? requests.size-request_index : batch_size;
-				var requests_batch = new ValueArray(batch_size);
-				
-				for(int i = request_index; i < request_index+batch_size; i++) {
-					requests_batch.append(requests[i]);
-				}
-				
-				var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
-						function_name,
-						typeof(string), this.session_token,
-						typeof(ValueArray), requests_batch);
-				
-				bool advance = true;
-				if(this.session.send_message(message) == 200) {
-					try {
-						Value v = Value (typeof (HashTable<string,Value?>));
-						Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-						HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-						
-						if((string)(vh.lookup("status")) == "200 OK" && vh.lookup("data").type() != typeof(bool)) {
-							unowned ValueArray va = (ValueArray)vh.lookup("data");
-							
-							if(va.n_values < max_response_size || batch_size == 1) {
-								values.add(v);
-							} else {
-								batch_size /= 2;
-								batch_size = batch_size > 0 ? batch_size : 1;
-								advance = false;
-							}
-						}
-					} catch(Error e) {}
-				}
-				
-				if(advance) {
-					request_index += batch_size;
-				}
-			}
-			
-			return values;
-		}
+		//Note: search() not implemented, because there is minimal improvement over search_multiple()
 		
 		public override Gee.MultiMap<File, Subtitle> search_multiple(Gee.Collection<File> files, Gee.Collection<string> languages) {
 			var subtitles_found_map = new Gee.HashMultiMap<File, Subtitle>();
 			var requests = new Gee.ArrayList<Value?>();
 			var hash_file = new Gee.HashMap<string, File>();
 			
+			//maximum response results is 500
+			const int MAX = 500;
+			//assume 5 hits per subtitle
+			const int HITS = 5;
+			
+			string codes = language_codes_string(languages);
 			foreach (var file in files) {
 				try {
-					string codes = language_codes_string(languages);
 					string hash = "%016llx".printf(this.file_hash(file));
 					double size = this.file_size(file);
 					HashTable<string, Value?> request = new HashTable<string, Value?>(str_hash, str_equal);
@@ -249,33 +133,68 @@ namespace Submarine {
 				} catch(Error e) {}
 			}
 			
-			//maximum response results is 500
-			const int MAX = 500;
-			//assume 5 hits per subtitle
-			const int HITS = 5;
-			var responses = this.batch_request("SearchSubtitles", requests, MAX/HITS, MAX);
-			
-			foreach(var response in responses) {
-				unowned ValueArray va = (ValueArray)((HashTable<string,Value?>)response).lookup("data");
+			SubtitleServer.BatchRequestMethod request_method = (request_batch) => {
+				var values = new ValueArray(request_batch.size);
 				
-				foreach(Value vresult in va) {
-					HashTable<string,Value?> result = (HashTable<string,Value?>)vresult;
-					
-					Subtitle subtitle = new Subtitle(this.info, result);
-					subtitle.format = (string)result.lookup("SubFormat");
-					subtitle.language = (string)result.lookup("ISO639");
-					subtitle.rating = double.parse((string)result.lookup("SubRating"));
-					
-					subtitles_found_map.set(hash_file[(string)result.lookup("MovieHash")], subtitle);
+				foreach(var request in request_batch) {
+					values.append(request);
 				}
-			}
+				
+				
+				var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
+						"SearchSubtitles",
+						typeof(string), this.session_token,
+						typeof(ValueArray), values);
+				
+				try {
+					if(this.session.send_message(message) == 200) {
+						Value v = Value (typeof (HashTable<string,Value?>));
+						Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
+						HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
+				
+						if((string)(vh.lookup("status")) == "200 OK") {
+							return v;
+						}
+					}
+				} catch(Error e) {}
+				
+				return null;
+			};
+			
+			SubtitleServer.BatchResponseMethod response_method = (response) => {
+				HashTable<string,Value?> vh = (HashTable<string,Value?>)response;
+				int results = 0;
+				
+				if(vh.lookup("data").type() != typeof(bool)) {
+					unowned ValueArray va = (ValueArray)((HashTable<string,Value?>)response).lookup("data");
+						
+					foreach(Value vresult in va) {
+						HashTable<string,Value?> result = (HashTable<string,Value?>)vresult;
+						
+						Subtitle subtitle = new Subtitle(this.info, result);
+						subtitle.format = (string)result.lookup("SubFormat");
+						subtitle.language = (string)result.lookup("ISO639");
+						subtitle.rating = double.parse((string)result.lookup("SubRating"));
+						
+						subtitles_found_map.set(hash_file[(string)result.lookup("MovieHash")], subtitle);
+						
+						results++;
+					}
+				}
+				
+				return results;
+			};
+			
+			this.batch_request(requests, request_method, response_method, MAX/HITS, MAX);
 			
 			return subtitles_found_map;
 		}
 		
+		//Note: download() not implemented, because there is minimal improvement over download_multiple()
+		
 		public override Gee.Set<Subtitle> download_multiple(Gee.Collection<Subtitle> subtitles) {
-			var requests = new Gee.ArrayList<Value?>();
 			var subtitles_downloaded = new Gee.HashSet<Subtitle>();
+			var requests = new Gee.ArrayList<Value?>();
 			var id_map = new Gee.HashMap<string, Subtitle>();
 			
 			foreach(Subtitle subtitle in subtitles) {
@@ -289,23 +208,61 @@ namespace Submarine {
 			
 			//maximum response results is 500
 			const int MAX = 500;
-			var responses = this.batch_request("DownloadSubtitles", requests, MAX);
 			
-			foreach(var response in responses) {
-				unowned ValueArray va = (ValueArray)((HashTable<string,Value?>)response).lookup("data");
+			SubtitleServer.BatchRequestMethod request_method = (request_batch) => {
+				var values = new ValueArray(request_batch.size);
 				
-				foreach(Value vresult in va) {
-					HashTable<string,Value?> result = (HashTable<string,Value?>)vresult;
-					
-					try {
-						var data = Base64.decode((string)result.lookup("data"));
-						Subtitle subtitle = id_map[(string)result.lookup("idsubtitlefile")];
-						subtitle.data = deflate_subtitle(data);
-						
-						subtitles_downloaded.add(subtitle);
-					} catch (Error e) {}
+				foreach(var request in request_batch) {
+					values.append(request);
 				}
-			}
+				
+				
+				var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
+						"DownloadSubtitles",
+						typeof(string), this.session_token,
+						typeof(ValueArray), values);
+				
+				try {
+					if(this.session.send_message(message) == 200) {
+						Value v = Value (typeof (HashTable<string,Value?>));
+						Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
+						HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
+				
+						if((string)(vh.lookup("status")) == "200 OK") {
+							return v;
+						}
+					}
+				} catch(Error e) {}
+				
+				return null;
+			};
+			
+			SubtitleServer.BatchResponseMethod response_method = (response) => {
+				HashTable<string,Value?> vh = (HashTable<string,Value?>)response;
+				int results = 0;
+				
+				if(vh.lookup("data").type() != typeof(bool)) {
+					unowned ValueArray va = (ValueArray)((HashTable<string,Value?>)response).lookup("data");
+						
+					foreach(Value vresult in va) {
+						HashTable<string,Value?> result = (HashTable<string,Value?>)vresult;
+						
+						try {
+							var data = Base64.decode((string)result.lookup("data"));
+							Subtitle subtitle = id_map[(string)result.lookup("idsubtitlefile")];
+							subtitle.data = inflate_subtitle(data);
+							
+							subtitles_downloaded.add(subtitle);
+						} catch (Error e) {}
+						
+						results++;
+					}
+				}
+				
+				return results;
+			};
+			
+			this.batch_request(requests, request_method, response_method, MAX);
 			
 			return subtitles_downloaded;
 		}
