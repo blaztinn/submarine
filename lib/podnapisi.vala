@@ -4,6 +4,9 @@ namespace Submarine {
 		private Soup.SessionSync session;
 		private string session_token;
 		
+		private const string XMLRPC_URI = "http://ssp.podnapisi.net:8000/RPC2";
+		private const string DOWNLOAD_URI = "http://www.podnapisi.net/static/podnapisi/";
+		
 		private Gee.HashSet<string> supported_languages;
 		private Gee.HashMap<string, int> language_ids;
 		private Gee.HashSet<string> selected_languages;
@@ -15,30 +18,24 @@ namespace Submarine {
 		}
 		
 		private bool filter_languages(Gee.Collection<string> languages) {
+			HashTable<string,Value?> vh;
+			
 			if(this.supported_languages == null) {
 				this.supported_languages = new Gee.HashSet<string>();
 				this.language_ids = new Gee.HashMap<string, int>();
 				
-				var message = Soup.XMLRPC.request_new ("http://ssp.podnapisi.net:8000/RPC2",
+				var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 					"supportedLanguages",
 					typeof(string), this.session_token);
 				
-				if(this.session.send_message(message) == 200) {
-					try {
-						Value v = Value (typeof (HashTable<string,Value?>));
-						Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-						HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-					
-						if((int)(vh.lookup("status")) == 200) {
-							unowned ValueArray va = (ValueArray) vh.lookup("languages");
-						
-							foreach(Value vresult in va) {
-								this.supported_languages.add((string)((ValueArray)vresult).get_nth(1));
-								this.language_ids.set((string)((ValueArray)vresult).get_nth(1),
-										(int)((ValueArray)vresult).get_nth(0));
-							}
-						}
-					} catch(Error e) {}
+				if(XMLRPC.call(this.session, message, out vh) && (int)vh.lookup("status") == 200) {
+					unowned ValueArray va = (ValueArray) vh.lookup("languages");
+				
+					foreach(Value vresult in va) {
+						this.supported_languages.add((string)((ValueArray)vresult).get_nth(1));
+						this.language_ids.set((string)((ValueArray)vresult).get_nth(1),
+								(int)((ValueArray)vresult).get_nth(0));
+					}
 				}
 			}
 			
@@ -72,25 +69,17 @@ namespace Submarine {
 						languages_array.append(this.language_ids[language]);
 					}
 					
-					var message = Soup.XMLRPC.request_new ("http://ssp.podnapisi.net:8000/RPC2", //TODO: save session languages to some variable and set only once
+					var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 							"setFilters",
 							typeof(string), this.session_token,
 							typeof(bool), true,
 							typeof(ValueArray), languages_array,
 							typeof(bool), false);
 					
-					try {
-						if(this.session.send_message(message) == 200) {
-							Value v = Value (typeof (HashTable<string,Value?>));
-							Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v); //TODO: na tu dej tudi IF(...)!
-							HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-						
-							if((int)(vh.lookup("status")) == 200) {
-								this.selected_languages = languages_set;
-								return true;
-							}
-						}
-					} catch (Error r) {}
+					if(XMLRPC.call(this.session, message, out vh) && (int)vh.lookup("status") == 200) {
+						this.selected_languages = languages_set;
+						return true;
+					}
 				} else {
 					return true;
 				}
@@ -154,43 +143,29 @@ namespace Submarine {
 		public override bool connect() {
 			const string username = "submarine";
 			const string password = "password";
+			HashTable<string,Value?> vh;
 			this.session = new Soup.SessionSync();
 			
-			var message = Soup.XMLRPC.request_new ("http://ssp.podnapisi.net:8000/RPC2",
+			var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 					"initiate",
 					typeof(string), "submarine");
 			
-			if(this.session.send_message(message) == 200) {
-				try {
-					Value v = Value (typeof (HashTable<string,Value?>));
-					Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-					HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-					
-					
-					if((int)(vh.lookup("status")) == 200) {
-						var nonce = (string)(vh.lookup("nonce"));
-						this.session_token = (string)(vh.lookup("session"));
-						
-						var formatted_password = Checksum.compute_for_string(ChecksumType.SHA256, 
-								Checksum.compute_for_string(ChecksumType.MD5, password) + nonce);
-						
-						message = Soup.XMLRPC.request_new ("http://ssp.podnapisi.net:8000/RPC2",
-								"authenticate",
-								typeof(string), this.session_token,
-								typeof(string), username,
-								typeof(string), formatted_password);
-					
-						if(this.session.send_message(message) == 200) {
-							v = Value (typeof (HashTable<string,Value?>));
-							Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-							vh = (HashTable<string,Value?>)v;
-						
-							if((int)(vh.lookup("status")) == 200) {
-								return true;
-							}
-						}
-					}
-				} catch (Error e) {}
+			if(XMLRPC.call(this.session, message, out vh) && (int)vh.lookup("status") == 200) {
+				var nonce = (string)(vh.lookup("nonce"));
+				this.session_token = (string)(vh.lookup("session"));
+				
+				var formatted_password = Checksum.compute_for_string(ChecksumType.SHA256, 
+						Checksum.compute_for_string(ChecksumType.MD5, password) + nonce);
+				
+				message = Soup.XMLRPC.request_new (XMLRPC_URI,
+						"authenticate",
+						typeof(string), this.session_token,
+						typeof(string), username,
+						typeof(string), formatted_password);
+			
+				if(XMLRPC.call(this.session, message, out vh) && (int)(vh.lookup("status")) == 200) {
+					return true;
+				}
 			}
 			
 			return false;
@@ -229,22 +204,15 @@ namespace Submarine {
 						values.append(request);
 					}
 					
-					var message = Soup.XMLRPC.request_new ("http://ssp.podnapisi.net:8000/RPC2",
+					var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 							"search",
 							typeof(string), this.session_token,
 							typeof(ValueArray), values);
 					
-					try {
-						if(this.session.send_message(message) == 200) {
-							Value v = Value (typeof (HashTable<string,Value?>));
-							Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-							HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-					
-							if((int)(vh.lookup("status")) == 200) {
-								return v;
-							}
-						}
-					} catch(Error e) {}
+					Value v;
+					if(XMLRPC.call(this.session, message, out v) && (int)((HashTable<string,Value?>)v).lookup("status") == 200) {
+						return v;
+					}
 					
 					return null;
 				};
@@ -275,7 +243,7 @@ namespace Submarine {
 					return results;
 				};
 				
-				this.batch_request(requests, request_method, response_method, MAX/HITS, MAX);
+				this.batch_process(requests, request_method, response_method, MAX/HITS, MAX);
 			}
 			
 			return subtitles_found_map;
@@ -283,39 +251,34 @@ namespace Submarine {
 		
 		public override Subtitle? download(Subtitle subtitle) {
 			var requests = new ValueArray(0);
+			HashTable<string,Value?> vh;
 			
 			HashTable<string,Value?> server_data = (HashTable<string,Value?>)subtitle.server_data;
 			requests.append(server_data.lookup("id"));
 			
-			var message = Soup.XMLRPC.request_new ("http://ssp.podnapisi.net:8000/RPC2",
+			var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 					"download",
 					typeof(string), this.session_token,
 					typeof(ValueArray), requests);
 			
-			if(this.session.send_message(message) == 200) {
-				try {
-					Value v = Value (typeof (HashTable<string,Value?>));
-					Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-					HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
+			if(XMLRPC.call(this.session, message, out vh) && 
+			   (int)vh.lookup("status") == 200 && 
+			   ((ValueArray)vh.lookup("names")).get_nth(0) != null) {
+				HashTable<string,Value?> result = (HashTable<string,Value?>)((ValueArray)vh.lookup("names")).get_nth(0);
+				
+				message = new Soup.Message("GET", DOWNLOAD_URI + (string)result.lookup("filename"));
+				
+				if(this.session.send_message(message) == 200) {
+					string data;
+					string format;
 					
-					if((int)(vh.lookup("status")) == 200 && ((ValueArray)vh.lookup("names")).get_nth(0) != null) {
-						HashTable<string,Value?> result = (HashTable<string,Value?>)((ValueArray)vh.lookup("names")).get_nth(0);
+					if(this.inflate_subtitle(message.response_body.data, out format, out data)) {
+						subtitle.format = format;
+						subtitle.data = data;
 						
-						message = new Soup.Message("GET", "http://www.podnapisi.net/static/podnapisi/" + (string)result.lookup("filename"));
-						
-						if(this.session.send_message(message) == 200) {
-							string data;
-							string format;
-							
-							if(this.inflate_subtitle(message.response_body.data, out format, out data)) {
-								subtitle.format = format;
-								subtitle.data = data;
-								
-								return subtitle;
-							}
-						}
+						return subtitle;
 					}
-				} catch (Error e) {}
+				}
 			}
 			
 			return null;

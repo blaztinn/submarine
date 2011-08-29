@@ -4,6 +4,8 @@ namespace Submarine {
 		private Soup.SessionSync session;
 		private string session_token;
 		
+		private const string XMLRPC_URI = "http://api.opensubtitles.org/xml-rpc";
+		
 		construct {
 			this.info = ServerInfo("OpenSubtitles",
 					"http://www.opensubtitles.org",
@@ -73,33 +75,26 @@ namespace Submarine {
 		public override bool connect() {
 			const string username = "";
 			const string password = "";
+			HashTable<string, Value?> vh;
 			this.session = new Soup.SessionSync();
 			
-			var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
+			var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 					"LogIn",
 					typeof(string), username,
 					typeof(string), password, 
 					typeof(string), "",
 					typeof(string), "OS Test User Agent");
 			
-			if(this.session.send_message(message) == 200) {
-				try {
-					Value v = Value (typeof (HashTable<string,Value?>));
-					Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-					HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-					
-					if((string)(vh.lookup("status")) == "200 OK") {
-						this.session_token = (string)(vh.lookup("token"));
-						return true;
-					}
-				} catch (Error e) {}
+			if(XMLRPC.call(this.session, message, out vh) && (string)(vh.lookup("status")) == "200 OK") {
+				this.session_token = (string)(vh.lookup("token"));
+				return true;
 			}
 			
 			return false;
 		}
 		
 		public override void disconnect() {
-			Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
+			Soup.XMLRPC.request_new (XMLRPC_URI,
 					"LogOut",
 					typeof(string), this.session_token);
 		}
@@ -141,22 +136,15 @@ namespace Submarine {
 				}
 				
 				
-				var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
+				var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 						"SearchSubtitles",
 						typeof(string), this.session_token,
 						typeof(ValueArray), values);
 				
-				try {
-					if(this.session.send_message(message) == 200) {
-						Value v = Value (typeof (HashTable<string,Value?>));
-						Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-						HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-				
-						if((string)(vh.lookup("status")) == "200 OK") {
-							return v;
-						}
-					}
-				} catch(Error e) {}
+				Value v;
+				if(XMLRPC.call(this.session, message, out v) && (string)((HashTable<string,Value?>)v).lookup("status") == "200 OK") {
+					return v;
+				}
 				
 				return null;
 			};
@@ -185,7 +173,7 @@ namespace Submarine {
 				return results;
 			};
 			
-			this.batch_request(requests, request_method, response_method, MAX/HITS, MAX);
+			this.batch_process(requests, request_method, response_method, MAX/HITS, MAX);
 			
 			return subtitles_found_map;
 		}
@@ -217,22 +205,15 @@ namespace Submarine {
 				}
 				
 				
-				var message = Soup.XMLRPC.request_new ("http://api.opensubtitles.org/xml-rpc",
+				var message = Soup.XMLRPC.request_new (XMLRPC_URI,
 						"DownloadSubtitles",
 						typeof(string), this.session_token,
 						typeof(ValueArray), values);
 				
-				try {
-					if(this.session.send_message(message) == 200) {
-						Value v = Value (typeof (HashTable<string,Value?>));
-						Soup.XMLRPC.parse_method_response ((string) message.response_body.flatten().data, -1, v);
-						HashTable<string,Value?> vh = (HashTable<string,Value?>)v;
-				
-						if((string)(vh.lookup("status")) == "200 OK") {
-							return v;
-						}
-					}
-				} catch(Error e) {}
+				Value v;
+				if(XMLRPC.call(this.session, message, out v) && (string)((HashTable<string,Value?>)v).lookup("status") == "200 OK") {
+					return v;
+				}
 				
 				return null;
 			};
@@ -262,7 +243,7 @@ namespace Submarine {
 				return results;
 			};
 			
-			this.batch_request(requests, request_method, response_method, MAX);
+			this.batch_process(requests, request_method, response_method, MAX);
 			
 			return subtitles_downloaded;
 		}

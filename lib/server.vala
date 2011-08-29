@@ -88,7 +88,7 @@ namespace Submarine {
 		
 		protected delegate Value? BatchRequestMethod(Gee.List<Value?> request_batch);
 		protected delegate int BatchResponseMethod(Value response);
-		protected Gee.ArrayList<Value?> batch_request(Gee.List<Value?> requests, BatchRequestMethod request_method, BatchResponseMethod response_method, int max_request_size, int max_response_size = 0)
+		protected Gee.ArrayList<Value?> batch_process(Gee.List<Value?> requests, BatchRequestMethod request_method, BatchResponseMethod response_method, int max_request_size, int max_response_size = 0)
 			requires (max_request_size > 0)
 			requires (max_response_size >= 0)
 		{
