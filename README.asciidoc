@@ -1,7 +1,7 @@
 Submarine
 ===========
 Blaž Tomažič <blaz.tomazic@gmail.com>
-0.1.0, 2011-08-11
+0.1.0, 2011-08-29
 :Author:    Blaž Tomažič
 :Email:     blaz.tomazic@gmail.com
 :Date:      2011-08-11
@@ -73,6 +73,7 @@ Submarine has little dependencies and is really lightweight.
 - glib2
 - libgee
 - libsoup
+- libarchive
 
 .Build
 - vala
@@ -107,4 +108,5 @@ link="https://flattr.com/submit/auto?user_id=blazt&url=http://github.com/blazt/s
 == Powered by
 This application is based on the following online subtitle services:
 
-- *OpenSubtitles* (http://www.opensubtitles.org)
+- *OpenSubtitles.org* (http://www.opensubtitles.org)
+- *Podnapisi.NET* (http://www.opensubtitles.org)

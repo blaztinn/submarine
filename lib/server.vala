@@ -28,8 +28,22 @@ namespace Submarine {
 		
 		public abstract new bool connect();
 		public abstract new void disconnect();
-		public abstract Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages);
-		public abstract Subtitle? download(Subtitle subtitle);
+		
+		//Note: Children of this class must override at least one of the next two functions!
+		public virtual Gee.Set<Subtitle> search(File file, Gee.Collection<string> languages) {
+			var subtitles_found = new Gee.HashSet<Subtitle>();
+			
+			var files = new Gee.HashSet<File>();
+			files.add(file);
+			
+			var subtitles_found_map = this.search_multiple(files, languages);
+			
+			if(file in subtitles_found_map) {
+				subtitles_found.add_all(subtitles_found_map[file]);
+			}
+			
+			return subtitles_found;
+		}
 		
 		public virtual Gee.MultiMap<File, Subtitle> search_multiple(Gee.Collection<File> files, Gee.Collection<string> languages) {
 			var subtitles_found_map = new Gee.HashMultiMap<File, Subtitle>();
@@ -41,6 +55,22 @@ namespace Submarine {
 			}
 			
 			return subtitles_found_map;
+		}
+		
+		//Note: Children of this class must override at least one of the next two functions!
+		public virtual Subtitle? download(Subtitle subtitle) {
+			var subtitles = new Gee.HashSet<Subtitle>();
+			subtitles.add(subtitle);
+			
+			var subtitles_downloaded = this.download_multiple(subtitles);
+			
+			if(!subtitles_downloaded.is_empty) {
+				var it = subtitles_downloaded.iterator();
+				it.next();
+				return it.get();
+			}
+			
+			return null;
 		}
 		
 		public virtual Gee.Set<Subtitle> download_multiple(Gee.Collection<Subtitle> subtitles) {
@@ -55,6 +85,48 @@ namespace Submarine {
 			
 			return subtitles_downloaded;
 		}
+		
+		protected delegate Value? BatchRequestMethod(Gee.List<Value?> request_batch);
+		protected delegate int BatchResponseMethod(Value response);
+		protected Gee.ArrayList<Value?> batch_request(string function_name, Gee.List<Value?> requests, BatchRequestMethod request_method, BatchResponseMethod response_method, int max_request_size, int max_response_size = 0)
+			requires (max_request_size > 0)
+			requires (max_response_size >= 0)
+		{
+			var batch_size = max_request_size;
+			var responses = new Gee.ArrayList<Value?>();
+			max_response_size = max_response_size > 0 ? max_response_size : max_request_size;
+			
+			var request_index = 0;
+			while(request_index < requests.size) {
+				batch_size = requests.size-request_index < batch_size ? requests.size-request_index : batch_size;
+				var requests_batch = new Gee.ArrayList<Value?>();
+				
+				for(int i = request_index; i < request_index+batch_size; i++) {
+					requests_batch.add(requests[i]);
+				}
+				
+				Value? response = request_method(requests);
+				
+				bool advance = true;
+				if(response != null) {
+					int results = response_method(response);
+					
+					if(results < max_response_size || batch_size == 1) {
+						responses.add(response);
+					} else {
+						batch_size /= 2;
+						batch_size = batch_size > 0 ? batch_size : 1;
+						advance = false;
+					}
+				}
+				
+				if(advance) {
+					request_index += batch_size;
+				}
+			}
+			
+			return responses;
+		}
 	}
 	
 	private Gee.List<string> all_server_codes = null;
@@ -64,6 +136,7 @@ namespace Submarine {
 		var all_servers = new Gee.HashSet<SubtitleServer>();
 		
 		all_servers.add(new OpenSubtitlesServer());
+		all_servers.add(new PodnapisiServer());
 		
 		return all_servers.read_only_view;
 	}

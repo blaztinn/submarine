@@ -16,11 +16,11 @@ AM_PROG_CC_C_O
 AM_PROG_VALAC
 
 # Checks for libraries.
-libsubmarine_modules="glib-2.0 gobject-2.0 libsoup-2.4 gee-1.0"
+libsubmarine_modules="glib-2.0 gobject-2.0 libsoup-2.4 gee-1.0 libarchive"
 PKG_CHECK_MODULES([LIBSUBMARINE], [$libsubmarine_modules])
 AC_SUBST([LIBSUBMARINE_CFLAGS])
 AC_SUBST([LIBSUBMARINE_LIBS])
-LIBSUBMARINE_VALAPACKAGES="--pkg gee-1.0 --pkg libsoup-2.4"
+LIBSUBMARINE_VALAPACKAGES="--pkg gee-1.0 --pkg libsoup-2.4 --pkg libarchive"
 AC_SUBST([LIBSUBMARINE_VALAPACKAGES])
 
 submarine_modules="$libsubmarine_modules gio-2.0"
