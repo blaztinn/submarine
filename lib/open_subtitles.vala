@@ -6,24 +6,54 @@ namespace Submarine {
 		
 		private const string XMLRPC_URI = "http://api.opensubtitles.org/xml-rpc";
 		
+		private Gee.HashSet<string> supported_languages;
+		
 		construct {
 			this.info = ServerInfo("OpenSubtitles",
 					"http://www.opensubtitles.org",
 					"os");
 		}
 		
+		private bool get_supported_languages() {
+			HashTable<string,Value?> vh;
+			
+			this.supported_languages = new Gee.HashSet<string>();
+			
+			var message = Soup.XMLRPC.request_new (XMLRPC_URI,
+				"GetSubLanguages",
+				typeof(string), this.session_token);
+			
+			if(XMLRPC.call(this.session, message, out vh)) {
+				unowned ValueArray va = (ValueArray) vh.lookup("data");
+			
+				foreach(Value vresult in va) {
+					HashTable<string,Value?> result = (HashTable<string,Value?>)vresult;
+					
+					this.supported_languages.add((string)result.lookup("SubLanguageID"));
+				}
+				
+				return true;
+			}
+			
+			return false;
+		}
+		
 		private string language_codes_string(Gee.Collection<string> languages) {
 			var languages_set = new Gee.HashSet<string>();
+			
+			if(this.supported_languages == null) {
+				this.get_supported_languages();
+			}
 			
 			foreach(var language in languages) {
 				var language_info = get_language_info(language);
 				
-				languages_set.add(language_info.long_code);
-				if(language_info.long_code_alt != null) {
-					languages_set.add(language_info.long_code_alt);
+				//opensubtitles.net supports only long codes
+				if(language_info.long_code in supported_languages) {
+					languages_set.add(language_info.long_code);
 				}
-				if(language_info.short_code != null) {
-					languages_set.add(language_info.short_code);
+				if(language_info.long_code_alt != null && language_info.long_code_alt in supported_languages) {
+					languages_set.add(language_info.long_code_alt);
 				}
 			}
 			

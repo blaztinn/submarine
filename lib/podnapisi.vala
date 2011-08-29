@@ -17,26 +17,38 @@ namespace Submarine {
 					"pn");
 		}
 		
+		private bool get_supported_languages() {
+			HashTable<string,Value?> vh;
+			
+			this.supported_languages = new Gee.HashSet<string>();
+			this.language_ids = new Gee.HashMap<string, int>();
+			
+			var message = Soup.XMLRPC.request_new (XMLRPC_URI,
+				"supportedLanguages",
+				typeof(string), this.session_token);
+			
+			if(XMLRPC.call(this.session, message, out vh) && (int)vh.lookup("status") == 200) {
+				unowned ValueArray va = (ValueArray) vh.lookup("languages");
+				
+				foreach(Value vresult in va) {
+					unowned ValueArray result = (ValueArray)vresult;
+					
+					this.supported_languages.add((string)result.get_nth(1));
+					this.language_ids.set((string)result.get_nth(1),
+							(int)result.get_nth(0));
+				}
+				
+				return true;
+			}
+			
+			return false;
+		}
+		
 		private bool filter_languages(Gee.Collection<string> languages) {
 			HashTable<string,Value?> vh;
 			
 			if(this.supported_languages == null) {
-				this.supported_languages = new Gee.HashSet<string>();
-				this.language_ids = new Gee.HashMap<string, int>();
-				
-				var message = Soup.XMLRPC.request_new (XMLRPC_URI,
-					"supportedLanguages",
-					typeof(string), this.session_token);
-				
-				if(XMLRPC.call(this.session, message, out vh) && (int)vh.lookup("status") == 200) {
-					unowned ValueArray va = (ValueArray) vh.lookup("languages");
-				
-					foreach(Value vresult in va) {
-						this.supported_languages.add((string)((ValueArray)vresult).get_nth(1));
-						this.language_ids.set((string)((ValueArray)vresult).get_nth(1),
-								(int)((ValueArray)vresult).get_nth(0));
-					}
-				}
+				this.get_supported_languages();
 			}
 			
 			var languages_set = new Gee.HashSet<string>();
