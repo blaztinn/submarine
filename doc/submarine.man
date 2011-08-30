@@ -1,5 +1,5 @@
 .\" Manpage for submarine.
-.TH submarine 1 "11 Aug 2011" "0.1.0" "submarine man page"
+.TH submarine 1 "30 Aug 2011" "0.1.1" "submarine man page"
 .SH NAME
 submarine \- download subtitles
 .SH SYNOPSIS
@@ -16,7 +16,7 @@ Select language to filter subtitles. \fICODE\fR is a 2 or 3 letter language code
 Select server to use for searching subtitles. \fICODE\fR is a 2 letter server code. Avaliable options can be listed with \fB-s help\fR. This option can be specified multiple times. By default, \fBall\fR servers are selected.
 .TP
 .B -f, --force
-Overwrite all existing subtitle files.
+Replace all existing subtitles. Existing subtitles are deleted even if they don't have the same extension as the new ones.
 .TP
 .B -q, --quiet
 Quiet mode. Don't output any messages or warnings.

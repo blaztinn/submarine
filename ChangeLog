@@ -1,2 +1,6 @@
+Version 0.1.1:
+	Podnapisi.net support implemented
+	Program return value reworked
+
 Version 0.1.0:
-	- OpenSubtitles support implemented
+	- OpenSubtitles.org support implemented

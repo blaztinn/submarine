@@ -1,14 +1,14 @@
 Submarine
 ===========
 Blaž Tomažič <blaz.tomazic@gmail.com>
-0.1.0, 2011-08-29
+0.1.1, 2011-08-30
 :Author:    Blaž Tomažič
 :Email:     blaz.tomazic@gmail.com
 :Date:      2011-08-11
 :Revision:  1
 
 == Description
-*Submarine* is a command-line application for searching and downloading *the right subtitles* for movies. Subtitles are searched based on movie file *hashes* and downloaded from online subtitle services. Downloaded subtitles are automatically renamed and saved next to corresponding files.
+*Submarine* is a command-line program for searching and downloading *the right subtitles* for movies. Subtitles are searched based on movie file *hashes* and downloaded from online subtitle services. Downloaded subtitles are automatically renamed and saved next to corresponding files.
 
 == Usage
 
@@ -25,7 +25,7 @@ Blaž Tomažič <blaz.tomazic@gmail.com>
   Select server to use for searching subtitles. CODE is a 2 letter server code. Avaliable options can be listed with +-s help+. This option can be specified multiple times. By default, +all+ servers are selected.
 
 +-f, --force+::
-  Overwrite all existing subtitle files.
+  Replace all existing subtitles. Existing subtitles are deleted even if they don't have the same extension as the new ones.
 
 +-q, --quiet+::
   Quiet mode. Don't output any messages or warnings.
@@ -106,7 +106,7 @@ image:http://api.flattr.com/button/flattr-badge-large.png[
 link="https://flattr.com/submit/auto?user_id=blazt&url=http://github.com/blazt/submarine&title=Submarine&language=en_GB&tags=github&category=software"]
 
 == Powered by
-This application is based on the following online subtitle services:
+This program is based on the following online subtitle services:
 
 - *OpenSubtitles.org* (http://www.opensubtitles.org)
 - *Podnapisi.NET* (http://www.opensubtitles.org)
