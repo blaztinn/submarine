@@ -1,6 +1,9 @@
+Version 0.1.2:
+	- Fix building with vala 0.14.0
+
 Version 0.1.1:
-	Podnapisi.net support implemented
-	Program return value reworked
+	- Podnapisi.net support implemented
+	- Program return value reworked
 
 Version 0.1.0:
 	- OpenSubtitles.org support implemented

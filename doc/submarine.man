@@ -1,5 +1,5 @@
 .\" Manpage for submarine.
-.TH submarine 1 "30 Aug 2011" "0.1.1" "submarine man page"
+.TH submarine 1 "30 Aug 2011" "0.1.2" "submarine man page"
 .SH NAME
 submarine \- download subtitles
 .SH SYNOPSIS

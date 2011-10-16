@@ -1,11 +1,11 @@
 Submarine
 ===========
 Blaž Tomažič <blaz.tomazic@gmail.com>
-0.1.1, 2011-08-30
+0.1.2, 2011-10-16
 :Author:    Blaž Tomažič
 :Email:     blaz.tomazic@gmail.com
-:Date:      2011-08-11
-:Revision:  1
+:Date:      2011-10-16
+:Revision:  2
 
 == Description
 *Submarine* is a command-line program for searching and downloading *the right subtitles* for movies. Subtitles are searched based on movie file *hashes* and downloaded from online subtitle services. Downloaded subtitles are automatically renamed and saved next to corresponding files.
