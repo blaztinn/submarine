@@ -102,7 +102,7 @@ Any kind of code fix/addition, translation, bug report, feature request, etc. is
 If you really like this project consider Flattring it on Flattr:
 
 image:http://api.flattr.com/button/flattr-badge-large.png[
-"Flattr this git repo",
+"Flattr this project",
 link="https://flattr.com/submit/auto?user_id=blazt&url=http://github.com/blazt/submarine&title=Submarine&language=en_GB&tags=github&category=software"]
 
 == Powered by
