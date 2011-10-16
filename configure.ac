@@ -15,6 +15,7 @@ LT_INIT
 AC_PROG_CC
 AM_PROG_CC_C_O
 AM_PROG_VALAC
+PKG_PROG_PKG_CONFIG
 
 # Checks for libraries.
 libsubmarine_modules="glib-2.0 gobject-2.0 libsoup-2.4 gee-1.0 libarchive"
