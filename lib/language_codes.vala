@@ -2,7 +2,7 @@ namespace Submarine {
 	
 	public struct LanguageInfo {
 		public string long_code { get; private set; }
-		public string? long_code_alt { get; private set; } //if this is set, than long_code has bibliographical meaning and log+ng_code_alt terminology meaning
+		public string? long_code_alt { get; private set; } //if this is set, then long_code has bibliographical meaning and long_code_alt terminological meaning
 		public string? short_code { get; private set; }
 		public string name { get; private set; }
 		
@@ -414,7 +414,7 @@ namespace Submarine {
 		{"pra",	null,	null,	"Prakrit languages"},
 		{"pro",	null,	null,	"Provençal, Old (to 1500);Occitan, Old (to 1500)"},
 		{"pus",	null,	"ps",	"Pushto; Pashto"},
-		{"qaa-qtz",	null,	null,	"Reserved for local use"},
+		//{"qaa-qtz",	null,	null,	"Reserved for local use"},
 		{"que",	null,	"qu",	"Quechua"},
 		{"raj",	null,	null,	"Rajasthani"},
 		{"rap",	null,	null,	"Rapanui"},
