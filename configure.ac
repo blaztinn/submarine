@@ -11,10 +11,14 @@ AC_CONFIG_FILES([Makefile
 				 doc/Makefile])
 
 # Checks for programs.
+AM_PROG_AR
 LT_INIT
+
 AC_PROG_CC
 AM_PROG_CC_C_O
+
 AM_PROG_VALAC
+
 PKG_PROG_PKG_CONFIG
 
 # Checks for libraries.
